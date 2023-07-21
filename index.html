@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>股票截图</title>
+<!--    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>-->
+    <script src="https://fastly.jsdelivr.net/npm/vue@3"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/vant@4/lib/vant.min.js"></script>
+    <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/vant@4/lib/index.css" />
+<!--    <link href="https://fonts.font.im/css?family=Work+Sans" rel="stylesheet">-->
+    <link href="https://fonts.font.im/css?family=Karla|Work+Sans" rel="stylesheet">
+
+    <style>
+        body {
+            display: flex;
+            justify-items: center;
+            align-items: center;
+            padding: 10px;
+            /*font-family: system-ui;*/
+            /*font-family: 'Work Sans', sans-serif;*/
+            font-size: 13px;
+        }
+        #left {
+            width: 375px;
+            /*height: 667px;*/
+            max-height: 795px;
+            background: rgb(16,17,19);
+            /*padding: 10px;*/
+            /*color: #eee;*/
+            color: rgb(199,200,202);
+        }
+        #right {
+            width: 680px;
+            background: #eeeeee;
+            padding: 10px;
+        }
+
+        .cell_x {
+            display: flex;align-items: center;justify-content: space-between;height: 40px;padding: 5px 0;border-bottom: 1px solid rgb(21,22,24);
+        }
+        .cell_x span:nth-child(2) {
+            text-align: right;
+        }
+        .text-right {text-align: right;}
+        .red {color:rgb(189,52,77);}
+        .green {color:green;}
+        .grey {color: rgb(89,90,92);}
+        .fs-12 {font-size: 12px;}
+        .fs-13 {font-size: 13px;}
+        .fs-14 {font-size: 14px;}
+        .line2 {
+            color: rgb(140,140,140);
+            font-size: 12px;
+            margin-top: 6px;
+        }
+        .form-diy .van-cell {
+            background: transparent;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+        }
+        .form-diy .van-field__label {
+            width: auto;
+            margin-right: 5px;
+        }
+        .form-diy .van-field__control {
+            background: #ffffff;
+            padding: 1px 3px;
+            text-align: center;
+            border-radius: 5px;
+            height: 30px;
+        }
+        .form-diy .label {
+            font-size: 14px;
+            color: rgb(50, 50, 51);
+        }
+        .form-diy select {
+            width: auto;
+            min-width: 40px;
+            height: 26px;
+            border: none;
+            border-radius: 5px;
+        }
+        .number {
+            font-family: 'Work Sans', sans-serif;
+        }
+        .money {
+            font-family: 'Karla', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" style="display: flex;">
+        <div id="left">
+            <div style="display: flex;justify-content: space-between;padding: 15px 25px 10px 40px;color: rgb(255,255,255);">
+                <span class="number" style="font-size: 17px;">{{ time }}</span>
+                <div style="display: flex;align-items: center;">
+                    <img :src="'https://huter-123.github.io/gp/net_'+ xinhao +'.png?=1'" style="width: 16px; height: 12px;margin-left: 5px;">
+                    <img :src="'https://huter-123.github.io/gp/wifi_'+wifi+'.png?_=2'" style="width: 16px; height: 12px;margin-left: 5px;" v-if="net_type === 'wifi'">
+                    <span style="margin-left: 5px;" v-else>{{ net_type }}</span>
+                    <img :src="'https://huter-123.github.io/gp/power_'+power+'.png?_=1'" style="width: 20px; height: 10px;margin-left: 5px;">
+                </div>
+            </div>
+
+            <div style="position: relative;display: flex;align-items: center;height: 46px;padding: 0 8px;">
+                <van-icon name="arrow-left" size="20"></van-icon>
+                <div style="margin: 0 auto;font-size: 16px;color: #fff;">Details</div>
+                <div style="width: 20px;">&nbsp;</div>
+            </div>
+
+            <div style="padding: 0 10px;">
+                <div class="cell_x">
+                    <span style="color: rgb(250,250,250);font-size: 14px;font-family: auto;">Order Details</span>
+                    <van-icon name="arrow-up"></van-icon>
+                </div>
+                <div class="cell_x">
+                    <span>Trading Direction</span>
+                    <span :class="trading_direction === 'Buy' ? 'red' : 'green'">{{ trading_direction }}</span>
+                </div>
+                <div class="cell_x">
+                    <span>Status</span>
+                    <span>
+                        <van-icon name="checked" color="green" size="10"></van-icon>
+                        <span style="padding-left: 5px;">Filled</span>
+                    </span>
+                </div>
+                <div class="cell_x">
+                    <span>Symbol</span>
+                    <span>
+                        <div>{{ symbol }}</div>
+                        <div class="line2 number money">{{ symbol_code }}</div>
+                    </span>
+                </div>
+                <div class="cell_x">
+                    <span>Order Qty/Price</span>
+                    <span>
+                        <div class="number money fs-14">{{ order_qty }}</div>
+                        <div class="line2 number money">{{ order_price }}</div>
+                    </span>
+                </div>
+                <div class="cell_x">
+                    <span>Order Amount</span>
+                    <span class="number money fs-14">{{ order_amount }}</span>
+                </div>
+                <div class="cell_x">
+                    <span>Fill Quantity/Avg Price</span>
+                    <span>
+                        <div class="number money fs-14">{{ fill_qty }}</div>
+                        <div class="line2 number money">{{ avg_price }}</div>
+                    </span>
+                </div>
+                <div class="cell_x">
+                    <span>Fill Amount</span>
+                    <span class="number money fs-14">{{ fill_amount }}</span>
+                </div>
+                <div class="cell_x">
+                    <span>Order Time</span>
+                    <span>
+                        <div class="number money fs-14">{{ order_time1 }}</div>
+                        <div class="line2 number money">{{ order_time2 }}</div>
+                    </span>
+                </div>
+                <div class="cell_x">
+                    <span>Order Types</span>
+                    <span style="display: flex;align-items: center;">
+                        <van-tag plain type="primary" color="rgb(38 95 153)" style="background: transparent;padding-bottom: 2px;margin-right: 5px;transform: scale(0.8);">LMT</van-tag>
+<!--                        <span style="color: rgb(57,137,177);border: 1px solid rgb(57,137,177); border-radius: 5px;font-size: 12px;padding-right: 5px;padding-left: 5px;">LMT</span>-->
+                        <span>Limit</span>
+                    </span>
+                </div>
+                <div class="cell_x">
+                    <span>Time-in-Force</span>
+                    <span>Day</span>
+                </div>
+                <div class="cell_x">
+                    <span>Pre-Market</span>
+                    <span>Allow</span>
+                </div>
+                <div class="cell_x">
+                    <span>Order ID</span>
+                    <span style="display: flex;align-items:center;">
+                        <span style="padding-right: 5px;" class="number">{{ order_id }}</span>
+                        <img src="https://huter-123.github.io/gp/copy.png" style="width: 20px; height: 25px;">
+                    </span>
+                </div>
+            </div>
+            <div class="cell_x" style="border-top: 5px solid rgb(26,27,29);padding: 0 10px;">
+                <span style="color: rgb(255,255,255);font-size: 14px;">Transaction Details</span>
+                <van-icon name="arrow-up"></van-icon>
+            </div>
+        </div>
+
+        <div id="right" class="form-diy">
+            <div>
+                <p>状态栏</p>
+                <van-field v-model="time" label="时间:" type="text" style="width: 86px;"></van-field>
+
+                <span class="label" style="margin-left: 15px;">信号等级：</span>
+                <select v-model="xinhao">
+                    <option>4</option>
+                    <option>3</option>
+                    <option>2</option>
+                    <option>1</option>
+                </select>
+
+                <span class="label" style="margin-left: 15px;">网络类型：</span>
+                <select v-model="net_type">
+                    <option>wifi</option>
+                    <option>5G</option>
+                    <option>4G</option>
+                </select>
+
+                <span class="label" style="margin-left: 15px;">Wifi 信号：</span>
+                <select v-model="wifi">
+                    <option>3</option>
+                    <option>2</option>
+                    <option>1</option>
+                    <option>0</option>
+                </select>
+
+<!--                <van-field v-model="power" label="电量(%):" type="digit" style="width: 100px;margin-left: 15px;"></van-field>-->
+                <span class="label" style="margin-left: 15px;">电量(%)：</span>
+                <select v-model="power">
+                    <option value="100">100%</option>
+                    <option value="90">90%</option>
+                    <option value="80">80%</option>
+                    <option value="70">70%</option>
+                    <option value="50">50%</option>
+                </select>
+            </div>
+
+            <div>
+                <p>内容</p>
+
+                <div>
+                    <span class="label">交易方向：</span>
+                    <select v-model="trading_direction">
+                        <option value="Buy">买</option>
+                        <option value="Sell">卖</option>
+                    </select>
+
+                    <van-field v-model="symbol" label="证券名称：" type="text" style="width: 200px;margin-left: 15px;"></van-field>
+                    <van-field v-model="symbol_code" label="证券代码：" type="digit" style="width: 200px;margin-left: 15px;"></van-field>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <van-field v-model="order_qty" label="订单数量：" type="text" style="width: 180px;"></van-field>
+                    <van-field v-model="order_price" label="订单价格：" type="text" style="width: 180px;margin-left: 15px;"></van-field>
+                    <van-field v-model="order_amount" label="订单金额：" type="text" style="width: 180px;margin-left: 15px;"></van-field>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <van-field v-model="fill_qty" label="成交数量：" type="text" style="width: 180px;"></van-field>
+                    <van-field v-model="avg_price" label="成交均价：" type="text" style="width: 180px;margin-left: 15px;"></van-field>
+                    <van-field v-model="fill_amount" label="成交金额：" type="text" style="width: 180px;margin-left: 15px;"></van-field>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <van-field v-model="order_time1" label="订单时间1：" type="text" style="width: 180px;"></van-field>
+                    <van-field v-model="order_time2" label="订单时间2：" type="text" style="width: 180px;margin-left: 15px;"></van-field>
+                    <van-field v-model="order_id" label="订单ID：" type="text" style="width: 240px;margin-left: 15px;"></van-field>
+                </div>
+
+                <div style="text-align: center;margin-top: 2rem;">
+                    <van-button type="warning" @click="showPic">在线预览</van-button>
+                    <span style="margin-left: 30px;">&nbsp;</span>
+                    <van-button type="success" @click="downloadPic">保存图片</van-button>
+                </div>
+            </div>
+        </div>
+
+        <div id="new_pic">
+            <img id="xxx">
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue
+        createApp({
+            data() {
+                const showPic = () => {
+                    html2canvas(document.querySelector("#left")).then(canvas => {
+                        canvas_pic = canvas.toDataURL("image/png")
+                        document.querySelector('#xxx').src = canvas_pic
+                    });
+                }
+                const downloadPic = () => {
+                    html2canvas(document.querySelector("#left")).then(canvas => {
+                        const imgData = canvas.toDataURL("image/png");
+                        const link = document.createElement("a");
+                        link.download = "screenshot.png";
+                        link.href = imgData;
+                        link.click();
+                    });
+                }
+
+                return {
+                    message: 'Hello Vue!',
+                    time: '15:50',
+                    power: 100,
+                    wifi: 3, //wifi信号
+                    xinhao: 4, //信号等级
+                    net_type: 'wifi', //联网类型 wifi/4g/5g
+
+                    trading_direction: 'Buy', //交易方向 Buy Sell
+                    symbol: 'TENCENT', //合约名称
+                    symbol_code: '00700', //合约代码
+                    order_qty: '100', //订单数量
+                    order_price: '332.20', //订单价格
+                    order_amount: '33,220.00', //订单金额
+                    fill_qty: '100', //成交数量
+                    avg_price: '332.20', //成交均价
+                    fill_amount: '33,220.00', //成交金额
+                    order_time1: '06/30/2023', //订单时间第一行
+                    order_time2: '15:45:43 HKT', //订单时间第二行
+                    order_id: 'FH336616365469962', //订单ID
+
+                    showPic,
+                    downloadPic,
+                }
+            }
+        }).use(vant).mount('#app')
+    </script>
+</body>
+</html>
